@@ -106,6 +106,17 @@ rec {
         src = (builtins.filterSource sourceFilter {{crate.source.LocalDirectory.path | safe}});
         {%- elif crate.source.Git %}
         workspace_member = null;
+        {%- if crate.source.Git.url is containing('anduril') %}
+        src = builtins.fetchGit {
+          url = {{crate.source.Git.url}};
+          rev = {{crate.source.Git.rev}};
+          {%- if crate.source.Git.ref %}
+          ref = {{crate.source.Git.ref}};
+          {%- else %}
+          ref = "master";
+          {%- endif %}
+        };
+        {%- else %}
         src = pkgs.fetchgit {
           url = {{crate.source.Git.url}};
           rev = {{crate.source.Git.rev}};
@@ -113,6 +124,7 @@ rec {
           sha256 = {{ crate.source.Git.sha256 }};
           {%- endif %}
         };
+        {%- endif %}
         {%- else %}
         # ERROR: Could not resolve source: {{crate.source | safe | json_encode()}}
         {%- endif -%}
